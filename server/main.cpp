@@ -1,6 +1,6 @@
 #include <iostream>
 
-#include <engine.hpp>
+//#include <engine.hpp>
 
 int main(int argc, char* argv[]) {
 
@@ -9,7 +9,7 @@ int main(int argc, char* argv[]) {
   try {
 
     // create engine with 1 thread dedicated
-    common::engine::engine engine(1);
+    //common::engine::engine engine(1);
 
 
 

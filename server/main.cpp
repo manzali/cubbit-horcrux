@@ -1,22 +1,26 @@
 #include <iostream>
 
-//#include <engine.hpp>
+#include "endpoint.hpp"
+#include "horcrux_server.hpp"
 
 int main(int argc, char* argv[]) {
-
-  std::cout << "Hello, World!" << std::endl;
 
   try {
 
     // create engine with 1 thread dedicated
-    //common::engine::engine engine(1);
+    //common::engine::engine ios(1);
 
+    auto const ep = horcrux::endpoint::make_endpoint("127.0.0.1", "44124");
+
+    boost::asio::io_context io_context;
+    horcrux_server s(io_context, ep);
+    io_context.run();
 
 
     std::cout << "Press enter to close the server...";
     char ch = getchar();
 
-    //engine.stop();
+    //ios.stop();
 
   } catch (std::runtime_error& e) {
     std::cerr << e.what();

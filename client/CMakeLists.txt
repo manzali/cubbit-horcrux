@@ -1,12 +1,21 @@
-include_directories(
-  ${CubbitHorcrux_SOURCE_DIR}/common/include
-)
+set(target horcrux)
 
 # add executable
-add_executable(horcrux main.cpp)
+add_executable(${target} main.cpp)
 
-set_property(TARGET horcrux PROPERTY CXX_STANDARD 20)
-set_property(TARGET horcrux PROPERTY CXX_STANDARD_REQUIRED On)
-set_property(TARGET horcrux PROPERTY CXX_EXTENSIONS Off)
+target_include_directories(
+    ${target} PUBLIC
+    ${CubbitHorcrux_SOURCE_DIR}/common
+    ${CMAKE_CURRENT_SOURCE_DIR}
+)
 
-target_link_libraries(horcrux PRIVATE Boost::asio Boost::json Boost::program_options)
+set_property(TARGET ${target} PROPERTY CXX_STANDARD 20)
+set_property(TARGET ${target} PROPERTY CXX_STANDARD_REQUIRED On)
+set_property(TARGET ${target} PROPERTY CXX_EXTENSIONS Off)
+
+target_link_libraries(
+    ${target} PRIVATE
+    Boost::asio
+    Boost::json
+    Boost::program_options
+)

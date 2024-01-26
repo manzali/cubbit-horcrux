@@ -16,7 +16,7 @@ int main(int argc, char* argv[]) {
     std::cout << "Press enter to close the server...";
     char ch = getchar();
 
-    engine.stop();
+    //engine.stop();
 
   } catch (std::runtime_error& e) {
     std::cerr << e.what();

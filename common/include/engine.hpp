@@ -5,13 +5,13 @@
 #include <chrono>
 #include <stdexcept>
 
-#include <asio.hpp>
+#include <boost/asio.hpp>
 
 namespace common {
 
 namespace engine {
 
-typedef asio::basic_waitable_timer<std::chrono::high_resolution_clock> timer_t;
+typedef boost::asio::basic_waitable_timer<std::chrono::high_resolution_clock> timer_t;
 
 class engine {
 
@@ -47,7 +47,7 @@ class engine {
     }
   }
 
-  asio::io_service& get() {
+  boost::asio::io_service& get() {
     return m_io_service;
   }
 
@@ -56,8 +56,8 @@ class engine {
 
  private:
 
-  asio::io_service m_io_service;
-  asio::io_service::work m_work;  // it is needed by the io_service
+  boost::asio::io_service m_io_service;
+  boost::asio::io_service::work m_work;  // it is needed by the io_service
   std::vector<std::thread> m_threads;
 };
 

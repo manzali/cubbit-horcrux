@@ -17,5 +17,6 @@ target_link_libraries(
     ${target} PRIVATE
     Boost::asio
     Boost::json
+    Boost::uuid
     Boost::program_options
 )

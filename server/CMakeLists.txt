@@ -16,7 +16,8 @@ set_property(TARGET ${target} PROPERTY CXX_EXTENSIONS Off)
 target_link_libraries(
     ${target} PRIVATE
     Boost::asio
-    Boost::json
+    Boost::beast
     Boost::uuid
+    Boost::json
     Boost::program_options
 )

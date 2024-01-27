@@ -9,7 +9,10 @@
 #include <boost/uuid/random_generator.hpp>
 #include <boost/lexical_cast.hpp>
 
+#include <boost/beast/core/detail/base64.hpp>
+
 namespace fs = std::filesystem;
+namespace bb = boost::beast::detail::base64;
 
 namespace horcrux
 {
@@ -55,7 +58,12 @@ namespace horcrux
 
         horcrux h(current_chunk_size);
         ifs.read(h.data(), h.size());
-        horcruxes.push_back(std::move(h));
+
+        // encode in base64
+        horcrux h_b64(bb::encoded_size(h.size()));
+        bb::encode(h_b64.data(), h.data(), h.size());
+
+        horcruxes.push_back(std::move(h_b64));
       }
 
       if (horcruxes.size() != n_chunks)
@@ -79,8 +87,12 @@ namespace horcrux
 
       std::ofstream ofs(file_path, std::ios::binary | std::ios_base::app);
 
-      for (auto const &h : horcruxes)
+      for (auto const &h_b64 : horcruxes)
       {
+        // decode from base64
+        horcrux h(bb::decoded_size(h_b64.size()));
+        bb::decode(h.data(), h_b64.data(), h_b64.size());
+
         ofs.write(h.data(), h.size());
       }
 

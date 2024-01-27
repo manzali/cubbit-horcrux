@@ -5,7 +5,7 @@ message(STATUS "Using ${CMAKE_CXX_COMPILER_ID} compiler")
 # create project
 project(CubbitHorcrux CXX)
 
-set(BOOST_INCLUDE_LIBRARIES asio system thread regex json program_options uuid)
+set(BOOST_INCLUDE_LIBRARIES asio system thread regex beast json program_options uuid)
 set(BOOST_ENABLE_CMAKE ON)
 
 include(FetchContent)

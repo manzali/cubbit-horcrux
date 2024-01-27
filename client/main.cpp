@@ -19,13 +19,13 @@ int main(int argc, char *argv[])
     std::string uuid = horcrux::management::generate_uuid();
 
     {
-      auto horcruxes{horcrux::management::generate_horcruxes_from_file("C:\\Temp\\test.txt", 3)};
+      auto horcruxes{horcrux::management::generate_horcruxes_from_file("C:\\Temp\\tree.jpg", 10)};
       horcrux::management::save_horcruxes_to_disk(horcruxes, uuid, "C:\\Temp");
     }
 
     {
       auto horcruxes{horcrux::management::load_horcruxes_from_disk(uuid, "C:\\Temp")};
-      horcrux::management::generate_file_from_horcruxes("C:\\Temp\\test2.txt", horcruxes);
+      horcrux::management::generate_file_from_horcruxes("C:\\Temp\\tree2.jpg", horcruxes);
     }
   }
   catch (std::runtime_error &e)

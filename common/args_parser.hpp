@@ -4,47 +4,59 @@
 #include <string>
 #include <iostream>
 
-#include <boost/program_options.hpp>
+#include <boost/algorithm/string.hpp>
 
 namespace fs = std::filesystem;
-namespace po = boost::program_options;
+
+namespace hd = horcrux::dataformat;
 
 namespace horcrux
 {
 
     struct client_args
     {
-        std::string cmd;
+        hd::request_type req;
         unsigned int n_chunks;
         fs::path file_path;
+        std::string file_id;
     };
+
+    std::string const help_description = "Wrong arguments [TODO: improve this]";
 
     client_args parse_client_args(int argc, char *argv[])
     {
-        po::options_description desc("Invocation : <program> <command> -n <chunks> <input_file>");
         client_args args;
 
-        po::positional_options_description p;
-        p.add("command", 1);
-        p.add("input", 1);
-
-        desc.add_options()("help,h", "print help messages.")("command,c", po::value<std::string>(&args.cmd)->required(), "command [save|load].")("num,n", po::value<unsigned int>(&args.n_chunks)->required(), "number of chunks in which the file will be splitted.")("input,i", po::value<fs::path>(&args.file_path)->required(), "path to the file that will be sent.");
-
-        try
+        if (argc < 2)
         {
+            std::cerr << help_description << std::endl;
+            exit(EXIT_FAILURE);
+        }
 
-            po::variables_map vm;
-            po::store(po::command_line_parser(argc, argv).options(desc).positional(p).run(), vm);
-
-            if (vm.count("help"))
+        switch (hd::get_request_type_from_string(argv[1]))
+        {
+        case hd::request_type::SAVE:
+        {
+            args.req = hd::request_type::SAVE;
+            if (argc < 5 || !boost::iequals(argv[2], "-n"))
             {
-                std::cout << desc << std::endl;
-                exit(EXIT_SUCCESS);
+                std::cerr << help_description << std::endl;
+                exit(EXIT_FAILURE);
             }
 
-            po::notify(vm);
+            // get horcrux count
+            try
+            {
+                args.n_chunks = std::stoi(argv[3]);
+            }
+            catch (const std::invalid_argument &ia)
+            {
+                std::cerr << help_description << std::endl;
+                exit(EXIT_FAILURE);
+            }
 
-            // Check if input file exists
+            args.file_path = argv[4];
+
             if (!fs::exists(args.file_path))
             {
                 std::cerr << "Missing input file " << args.file_path << std::endl;
@@ -59,11 +71,29 @@ namespace horcrux
                 exit(EXIT_FAILURE);
             }
         }
-        catch (po::error const &e)
+        break;
+
+        case hd::request_type::LOAD:
         {
-            std::cerr << e.what() << '\n'
-                      << desc << std::endl;
+            args.req = hd::request_type::LOAD;
+
+            if (argc < 4)
+            {
+                std::cerr << help_description << std::endl;
+                exit(EXIT_FAILURE);
+            }
+
+            args.file_id = argv[2];   // TODO: check if it is a valid uuid
+            args.file_path = argv[3]; // TODO: check if it is a valid path (at list the directory)
+        }
+        break;
+
+        case hd::request_type::UNKNOWN:
+        default:
+        {
+            std::cerr << help_description << std::endl;
             exit(EXIT_FAILURE);
+        }
         }
 
         return args;

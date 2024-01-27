@@ -19,5 +19,4 @@ target_link_libraries(
     Boost::beast
     Boost::uuid
     Boost::json
-    Boost::program_options
 )

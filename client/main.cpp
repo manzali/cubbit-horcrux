@@ -14,7 +14,14 @@ int main(int argc, char *argv[])
   try
   {
 
-    // horcrux::client_args const args = horcrux::parse_client_args(argc, argv);
+    horcrux::client_args const args = horcrux::parse_client_args(argc, argv);
+
+    std::cout << "req: " << args.req << std::endl;
+    std::cout << "n_chunk: " << args.n_chunks << std::endl;
+    std::cout << "file_path: " << args.file_path << std::endl;
+    std::cout << "file_id: " << args.file_id << std::endl;
+
+    return 0;
 
     std::string uuid = horcrux::management::generate_uuid();
 

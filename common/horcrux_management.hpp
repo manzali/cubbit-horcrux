@@ -20,8 +20,6 @@ namespace horcrux
   namespace management
   {
 
-    typedef std::vector<char> horcrux;
-
     std::string generate_uuid()
     {
       return boost::lexical_cast<std::string>(boost::uuids::random_generator()());
@@ -32,7 +30,7 @@ namespace horcrux
       return uuid + "_" + std::to_string(n);
     }
 
-    std::vector<horcrux> generate_horcruxes_from_file(fs::path file_path, unsigned int n_chunks)
+    std::vector<std::string> generate_horcruxes_from_file(fs::path file_path, unsigned int n_chunks)
     {
       // Check if file exists
       if (!fs::exists(file_path))
@@ -49,21 +47,21 @@ namespace horcrux
       size_t const chunk_size = file_size / n_chunks;
       size_t remaining_size = file_size;
 
-      std::vector<horcrux> horcruxes;
+      std::vector<std::string> horcruxes;
 
       while (remaining_size > 0)
       {
         size_t const current_chunk_size = (remaining_size >= (chunk_size * 2) ? chunk_size : remaining_size);
         remaining_size -= current_chunk_size;
 
-        horcrux h(current_chunk_size);
-        ifs.read(h.data(), h.size());
+        std::string s(current_chunk_size, 0);
+        ifs.read(&s[0], s.size());
 
         // encode in base64
-        horcrux h_b64(bb::encoded_size(h.size()));
-        bb::encode(h_b64.data(), h.data(), h.size());
+        std::string s_b64(bb::encoded_size(s.size()), 0);
+        bb::encode(s_b64.data(), s.data(), s.size());
 
-        horcruxes.push_back(std::move(h_b64));
+        horcruxes.push_back(std::move(s_b64));
       }
 
       if (horcruxes.size() != n_chunks)
@@ -76,7 +74,7 @@ namespace horcrux
       return horcruxes;
     }
 
-    void generate_file_from_horcruxes(fs::path file_path, std::vector<horcrux> const &horcruxes)
+    void generate_file_from_horcruxes(fs::path file_path, std::vector<std::string> const &horcruxes)
     {
       // Check if output file already exists
       if (fs::exists(file_path))
@@ -90,16 +88,15 @@ namespace horcrux
       for (auto const &h_b64 : horcruxes)
       {
         // decode from base64
-        horcrux h(bb::decoded_size(h_b64.size()));
-        bb::decode(h.data(), h_b64.data(), h_b64.size());
-
-        ofs.write(h.data(), h.size());
+        std::string s(bb::decoded_size(h_b64.size()), 0);
+        bb::decode(s.data(), h_b64.data(), h_b64.size());
+        ofs.write(&s[0], s.size());
       }
 
       ofs.close();
     }
 
-    void save_horcruxes_to_disk(std::vector<horcrux> const &horcruxes, std::string uuid, fs::path dir_path)
+    void save_horcruxes_to_disk(std::vector<std::string> const &horcruxes, std::string uuid, fs::path dir_path)
     {
       // Check if path is a directory
       if (!fs::is_directory(dir_path))
@@ -129,7 +126,7 @@ namespace horcrux
       }
     }
 
-    std::vector<horcrux> load_horcruxes_from_disk(std::string uuid, fs::path dir_path)
+    std::vector<std::string> load_horcruxes_from_disk(std::string uuid, fs::path dir_path)
     {
       // Check if path is a directory
       if (!fs::is_directory(dir_path))
@@ -147,7 +144,7 @@ namespace horcrux
         exit(EXIT_FAILURE);
       }
 
-      std::vector<horcrux> horcruxes;
+      std::vector<std::string> horcruxes;
 
       int h_count = 0;
       while (fs::exists(dir_path / generate_horcrux_name(uuid, h_count)))
@@ -155,10 +152,10 @@ namespace horcrux
         fs::path current_file{dir_path / generate_horcrux_name(uuid, h_count)};
         std::ifstream ifs(current_file, std::ios::binary);
 
-        horcrux h(fs::file_size(current_file));
-        ifs.read(h.data(), h.size());
+        std::string s(fs::file_size(current_file), 0);
+        ifs.read(s.data(), s.size());
 
-        horcruxes.push_back(std::move(h));
+        horcruxes.push_back(std::move(s));
 
         ifs.close();
         ++h_count;

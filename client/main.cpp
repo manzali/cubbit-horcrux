@@ -7,6 +7,7 @@
 #include "dataformat.hpp"
 #include "args_parser.hpp"
 #include "horcrux_management.hpp"
+#include "horcrux_request.hpp"
 
 int main(int argc, char *argv[])
 {
@@ -21,12 +22,15 @@ int main(int argc, char *argv[])
     std::cout << "file_path: " << args.file_path << std::endl;
     std::cout << "file_id: " << args.file_id << std::endl;
 
-    return 0;
-
     std::string uuid = horcrux::management::generate_uuid();
 
     {
-      auto horcruxes{horcrux::management::generate_horcruxes_from_file("C:\\Temp\\tree.jpg", 10)};
+      auto horcruxes{horcrux::management::generate_horcruxes_from_file(args.file_path, args.n_chunks)};
+
+      auto sr = horcrux::request::generate_save_request(uuid, horcruxes.size(), 0, horcruxes[0]);
+      std::cout << "save request:\n"
+                << bj::serialize(sr) << std::endl;
+
       horcrux::management::save_horcruxes_to_disk(horcruxes, uuid, "C:\\Temp");
     }
 

@@ -6,16 +6,20 @@
 
 #include <boost/algorithm/string.hpp>
 
+#include "dataformat.hpp"
+#include "horcrux_request.hpp"
+
 namespace fs = std::filesystem;
 
 namespace hd = horcrux::dataformat;
+namespace hr = horcrux::request;
 
 namespace horcrux
 {
 
     struct client_args
     {
-        hd::request_type req;
+        hr::request_type req;
         unsigned int n_chunks;
         fs::path file_path;
         std::string file_id;
@@ -33,11 +37,11 @@ namespace horcrux
             exit(EXIT_FAILURE);
         }
 
-        switch (hd::get_request_type_from_string(argv[1]))
+        switch (hr::get_request_type_from_string(argv[1]))
         {
-        case hd::request_type::SAVE:
+        case hr::request_type::SAVE:
         {
-            args.req = hd::request_type::SAVE;
+            args.req = hr::request_type::SAVE;
             if (argc < 5 || !boost::iequals(argv[2], "-n"))
             {
                 std::cerr << help_description << std::endl;
@@ -73,9 +77,9 @@ namespace horcrux
         }
         break;
 
-        case hd::request_type::LOAD:
+        case hr::request_type::LOAD:
         {
-            args.req = hd::request_type::LOAD;
+            args.req = hr::request_type::LOAD;
 
             if (argc < 4)
             {
@@ -88,7 +92,7 @@ namespace horcrux
         }
         break;
 
-        case hd::request_type::UNKNOWN:
+        case hr::request_type::UNKNOWN:
         default:
         {
             std::cerr << help_description << std::endl;

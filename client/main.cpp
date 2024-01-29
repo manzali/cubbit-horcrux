@@ -18,7 +18,7 @@ int main(int argc, char *argv[])
         std::cout << "req: " << args.req << std::endl;
         std::cout << "n_chunk: " << args.n_chunks << std::endl;
         std::cout << "file_path: " << args.file_path << std::endl;
-        std::cout << "file_id: " << args.file_id << std::endl;
+        std::cout << "uuid: " << args.uuid << std::endl;
     */
 
     horcrux::client::client c;
@@ -34,7 +34,7 @@ int main(int argc, char *argv[])
       break;
 
     case horcrux::request::request_type::LOAD:
-      ret = c.send_load_request(args.file_id, args.file_path);
+      ret = c.send_load_request(args.uuid, args.file_path);
       break;
 
     default:

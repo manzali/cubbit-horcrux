@@ -24,7 +24,7 @@ namespace horcrux
             hr::request_type req;
             unsigned int n_chunks;
             fs::path file_path;
-            std::string file_id;
+            std::string uuid;
         };
 
         std::string const help_description = "Wrong arguments [TODO: improve this]";
@@ -89,7 +89,7 @@ namespace horcrux
                     exit(EXIT_FAILURE);
                 }
 
-                args.file_id = argv[2];   // TODO: check if it is a valid uuid
+                args.uuid = argv[2];      // TODO: check if it is a valid uuid
                 args.file_path = argv[3]; // TODO: check if it is a valid path (at list the directory)
             }
             break;

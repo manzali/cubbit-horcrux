@@ -75,7 +75,8 @@ namespace horcrux
                                                       }
                                                       else
                                                       {
-                                                          std::cerr << "async_read_until error code: " << ec << std::endl;
+                                                          std::cout << "closing session\n"
+                                                                    << std::endl;
                                                       }
                                                   }
                                                   catch (const std::exception &e)
@@ -100,7 +101,8 @@ namespace horcrux
 
                     if (!hm::save_horcrux_to_disk(horcrux, uuid, index, m_dir))
                     {
-                        throw std::runtime_error("save request handled with errors");
+                        std::cerr << "error saving horcrux to disk" << std::endl;
+                        return hd::status_code::ERROR_SAVING_HORCRUX;
                     }
 
                     std::cout << "save request handled successfully" << std::endl;
@@ -116,9 +118,39 @@ namespace horcrux
 
             hd::status_code handle_load_request(hr::request_obj const &obj)
             {
+                try
+                {
+                    std::string uuid;
 
-                // std::cout << "handle_load_request:\n"
-                //           << hr::serialize_request(obj) << std::endl;
+                    if (!hr::parse_load_request(obj, uuid))
+                    {
+                        throw std::runtime_error("malformed load request");
+                    }
+
+                    std::vector<std::string> horcruxes;
+
+                    if (!hm::load_horcruxes_from_disk(uuid, m_dir, horcruxes))
+                    {
+                        std::cerr << "error loading horcruxes from disk" << std::endl;
+                        hd::status_code status_code = hd::status_code::ERROR_LOADING_HORCRUXES;
+                        boost::asio::write(m_socket, boost::asio::buffer(hr::generate_load_reply(status_code) + horcrux::dataformat::message_delimiter));
+                        return status_code;
+                    }
+
+                    unsigned int total = horcruxes.size();
+                    int status_code = hd::status_code::HORCRUXES_FOUND;
+                    for (unsigned int index = 0; index < total; ++index)
+                    {
+                        boost::asio::write(m_socket, boost::asio::buffer(hr::generate_load_reply(status_code, index, total, horcruxes[index]) + horcrux::dataformat::message_delimiter));
+                    }
+
+                    std::cout << "load request handled successfully" << std::endl;
+                }
+                catch (const std::exception &e)
+                {
+                    std::cerr << e.what() << '\n';
+                    return hd::status_code::LOAD_REQUEST_FAILED;
+                }
 
                 return hd::status_code::LOAD_REQUEST_OK;
             }

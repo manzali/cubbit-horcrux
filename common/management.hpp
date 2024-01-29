@@ -3,6 +3,7 @@
 #include <filesystem>
 #include <vector>
 #include <fstream>
+#include <map>
 
 #include <boost/uuid/uuid.hpp>
 #include <boost/uuid/uuid_io.hpp>
@@ -30,13 +31,13 @@ namespace horcrux
       return uuid + "_" + std::to_string(n);
     }
 
-    std::vector<std::string> generate_horcruxes_from_file(fs::path file_path, unsigned int n_chunks)
+    bool generate_horcruxes_from_file(fs::path const &file_path, unsigned int n_chunks, std::vector<std::string> &horcruxes)
     {
       // Check if file exists
       if (!fs::exists(file_path))
       {
         std::cerr << "Path \"" << file_path << "\" doesn't exist" << std::endl;
-        exit(EXIT_FAILURE);
+        return false;
       }
 
       std::ifstream ifs(file_path, std::ios::binary);
@@ -46,8 +47,6 @@ namespace horcrux
 
       size_t const chunk_size = file_size / n_chunks;
       size_t remaining_size = file_size;
-
-      std::vector<std::string> horcruxes;
 
       while (remaining_size > 0)
       {
@@ -67,26 +66,36 @@ namespace horcrux
       if (horcruxes.size() != n_chunks)
       {
         std::cerr << "The number of generated horcrux is different from the number expected" << std::endl;
-        exit(EXIT_FAILURE);
+        return false;
       }
 
       ifs.close();
-      return horcruxes;
+      return true;
     }
 
-    void generate_file_from_horcruxes(fs::path file_path, std::vector<std::string> const &horcruxes)
+    bool generate_file_from_horcruxes(fs::path file_path, std::map<unsigned int, std::string> const &horcruxes)
     {
       // Check if output file already exists
       if (fs::exists(file_path))
       {
         std::cerr << "Already existing output file " << file_path << std::endl;
-        exit(EXIT_FAILURE);
+        return false;
       }
 
       std::ofstream ofs(file_path, std::ios::binary | std::ios_base::app);
 
-      for (auto const &h_b64 : horcruxes)
+      unsigned int total = horcruxes.size();
+
+      for (unsigned int index = 0; index < total; ++index)
       {
+        if (horcruxes.find(index) == horcruxes.end())
+        {
+          std::cerr << "Missing horcrux with index " << index << std::endl;
+          return false;
+        }
+
+        std::string const &h_b64 = horcruxes.at(index);
+
         // decode from base64
         std::string s(bb::decoded_size(h_b64.size()), 0);
         bb::decode(s.data(), h_b64.data(), h_b64.size());
@@ -94,9 +103,10 @@ namespace horcrux
       }
 
       ofs.close();
+      return true;
     }
 
-    bool save_horcrux_to_disk(std::string const &horcrux, std::string uuid, unsigned int index, fs::path dir_path)
+    bool save_horcrux_to_disk(std::string const &horcrux, std::string const &uuid, unsigned int index, fs::path dir_path)
     {
       // Check if path is a directory
       if (!fs::is_directory(dir_path))
@@ -152,13 +162,14 @@ namespace horcrux
           }
         }
     */
-    std::vector<std::string> load_horcruxes_from_disk(std::string uuid, fs::path dir_path)
+
+    bool load_horcruxes_from_disk(std::string const &uuid, fs::path dir_path, std::vector<std::string> &horcruxes)
     {
       // Check if path is a directory
       if (!fs::is_directory(dir_path))
       {
         std::cerr << "Path \"" << dir_path << "\" is not a directory" << std::endl;
-        exit(EXIT_FAILURE);
+        return false;
       }
 
       dir_path /= uuid;
@@ -167,10 +178,8 @@ namespace horcrux
       if (!fs::exists(dir_path))
       {
         std::cerr << "Path \"" << dir_path << "\" doesn't exist" << std::endl;
-        exit(EXIT_FAILURE);
+        return false;
       }
-
-      std::vector<std::string> horcruxes;
 
       int h_count = 0;
       while (fs::exists(dir_path / generate_horcrux_name(uuid, h_count)))
@@ -187,9 +196,7 @@ namespace horcrux
         ++h_count;
       }
 
-      return horcruxes;
+      return true;
     }
-
   }
-
 }

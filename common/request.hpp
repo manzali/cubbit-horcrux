@@ -96,11 +96,24 @@ namespace horcrux
             }
         }
 
-        request_obj generate_load_request(std::string const &uuid)
+        std::string generate_load_request(std::string const &uuid)
         {
-            return request_obj{
+            return bj::serialize(bj::value{
                 {"request_type", get_request_string_from_type(request_type::LOAD)},
-                {"uuid", uuid}};
+                {"uuid", uuid}});
+        }
+
+        bool parse_load_request(request_obj const &obj, std::string &uuid)
+        {
+            try
+            {
+                uuid = bj::value_to<std::string>(obj.as_object().at("uuid"));
+                return true;
+            }
+            catch (...)
+            {
+                return false;
+            }
         }
 
         std::string generate_save_reply(int status_code)
@@ -123,56 +136,37 @@ namespace horcrux
             }
         }
 
-        request_obj generate_load_reply(unsigned int status_code, unsigned int tot_h, unsigned int id_h, std::string const &horcrux)
+        std::string generate_load_reply(int status_code, unsigned int index, unsigned int total, std::string const &horcrux)
         {
-            return request_obj{
+            return bj::serialize(bj::value{
                 {"request_type", get_request_string_from_type(request_type::LOAD)},
                 {"status_code", status_code},
-                {"total_horcruxes", tot_h},
-                {"id_horcrux", id_h},
-                {"horcrux", horcrux}};
+                {"index", index},
+                {"total", total},
+                {"horcrux", horcrux}});
         }
 
-        request_obj generate_load_reply(unsigned int status_code)
+        std::string generate_load_reply(int status_code)
         {
-            // In case of missing horcrux send only status_code
-            return request_obj{
+            return bj::serialize(bj::value{
                 {"request_type", get_request_string_from_type(request_type::LOAD)},
-                {"status_code", status_code}};
+                {"status_code", status_code}});
         }
-        /*
-                request_type parse_request(std::string str, request_obj &obj)
-                {
-                    try
-                    {
-                        obj = bj::parse(str);
-                        std::string str = bj::value_to<std::string>(obj.as_object().at("request_type"));
-                        return get_request_type_from_string(str);
-                    }
-                    catch (...)
-                    {
-                        return request_type::UNKNOWN;
-                    }
-                }
-        */
-        request_type parse_request_type(std::string const &data)
+
+        bool parse_load_reply(request_obj const &obj, int &status_code, unsigned int &index, unsigned int &total, std::string &horcrux)
         {
             try
             {
-                // request type id the first field of data
-                std::string const str = data.substr(0, data.find(hd::field_delimiter));
-                return get_request_type_from_string(str);
+                status_code = bj::value_to<int>(obj.as_object().at("status_code"));
+                index = bj::value_to<unsigned int>(obj.as_object().at("index"));
+                total = bj::value_to<unsigned int>(obj.as_object().at("total"));
+                horcrux = bj::value_to<std::string>(obj.as_object().at("horcrux"));
+                return true;
             }
             catch (...)
             {
-                return request_type::UNKNOWN;
+                return false;
             }
         }
-
-        std::string serialize_request(request_obj const &obj)
-        {
-            return bj::serialize(obj);
-        }
     }
-
 }

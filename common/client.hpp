@@ -34,34 +34,48 @@ namespace horcrux
             {
                 try
                 {
-                    std::vector<std::string> horcruxes{horcrux::management::generate_horcruxes_from_file(file_path, n_chunks)};
+                    std::vector<std::string> horcruxes;
+                    if (!horcrux::management::generate_horcruxes_from_file(file_path, n_chunks, horcruxes))
+                    {
+                        std::cerr << "error generate_horcruxes_from_file" << std::endl;
+                        return horcrux::dataformat::status_code::ERROR_GENERATING_HORCRUXES;
+                    }
+
                     std::string uuid = horcrux::management::generate_uuid();
 
                     for (unsigned int index = 0; index < horcruxes.size(); ++index)
                     {
                         std::string const req = horcrux::request::generate_save_request(uuid, index, horcruxes.size(), horcruxes[index]);
 
-                        boost::asio::write(m_socket, boost::asio::buffer(req + horcrux::dataformat::message_delimiter));
-
                         boost::system::error_code ec;
+                        boost::asio::write(m_socket, boost::asio::buffer(req + horcrux::dataformat::message_delimiter), ec);
+                        if (ec)
+                        {
+                            std::cerr << "write error code: " << ec << std::endl;
+                            return horcrux::dataformat::status_code::SAVE_REQUEST_FAILED;
+                        }
+
                         boost::asio::streambuf buffer;
                         boost::asio::read_until(m_socket, buffer, horcrux::dataformat::message_delimiter, ec);
 
                         if (ec)
                         {
-                            std::cerr << "async_read error code: " << ec << std::endl;
+                            std::cerr << "read_until error code: " << ec << std::endl;
                             return horcrux::dataformat::status_code::SAVE_REQUEST_FAILED;
                         }
 
-                        std::string data{
-                            std::istreambuf_iterator<char>(&buffer),
-                            std::istreambuf_iterator<char>()};
-
                         hr::request_obj obj;
-                        int status_code = -1;
-                        if (!hr::parse_request(data, obj) || !hr::parse_save_reply(obj, status_code))
+                        if (!hr::parse_request({std::istreambuf_iterator<char>(&buffer),
+                                                std::istreambuf_iterator<char>()},
+                                               obj))
                         {
-                            throw std::runtime_error("malformed request response");
+                            throw std::runtime_error("malformed message");
+                        }
+
+                        int status_code = -1;
+                        if (!hr::parse_save_reply(obj, status_code))
+                        {
+                            throw std::runtime_error("malformed save reply message");
                         }
 
                         if (status_code != horcrux::dataformat::status_code::SAVE_REQUEST_OK)
@@ -80,11 +94,58 @@ namespace horcrux
                 }
             }
 
-            int send_load_request(std::string const &file_id, std::filesystem::path const &file_path)
+            int send_load_request(std::string const &uuid, std::filesystem::path const &file_path)
             {
                 try
                 {
-                    std::vector<std::string> horcruxes;
+                    boost::system::error_code ec;
+                    boost::asio::write(m_socket, boost::asio::buffer(horcrux::request::generate_load_request(uuid) + horcrux::dataformat::message_delimiter), ec);
+
+                    if (ec)
+                    {
+                        std::cerr << "write error code: " << ec << std::endl;
+                        return horcrux::dataformat::status_code::LOAD_REQUEST_FAILED;
+                    }
+
+                    std::map<unsigned int, std::string> horcruxes;
+
+                    unsigned int total = 1;
+                    do
+                    {
+                        boost::asio::streambuf buffer;
+                        boost::asio::read_until(m_socket, buffer, horcrux::dataformat::message_delimiter, ec);
+
+                        if (ec)
+                        {
+                            std::cerr << "read_until error code: " << ec << std::endl;
+                            return horcrux::dataformat::status_code::LOAD_REQUEST_FAILED;
+                        }
+
+                        hr::request_obj obj;
+                        if (!hr::parse_request({std::istreambuf_iterator<char>(&buffer),
+                                                std::istreambuf_iterator<char>()},
+                                               obj))
+                        {
+                            throw std::runtime_error("malformed message");
+                        }
+
+                        int status_code;
+                        unsigned int index;
+                        std::string horcrux;
+                        if (!hr::parse_load_reply(obj, status_code, index, total, horcrux))
+                        {
+                            throw std::runtime_error("malformed load reply message");
+                        }
+
+                        horcruxes.emplace(index, std::move(horcrux));
+
+                    } while (horcruxes.size() < total);
+
+                    if (!horcrux::management::generate_file_from_horcruxes(file_path, horcruxes))
+                    {
+                        std::cerr << "error generate_file_from_horcruxes" << std::endl;
+                        return horcrux::dataformat::status_code::ERROR_SAVING_FILE;
+                    }
                 }
                 catch (const std::exception &e)
                 {

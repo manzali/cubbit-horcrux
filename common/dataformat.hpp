@@ -20,7 +20,13 @@ namespace horcrux
             SAVE_REQUEST_FAILED,
             LOAD_REQUEST_OK,
             LOAD_REQUEST_FAILED,
-            UNKNOWN_REQUEST
+            UNKNOWN_REQUEST,
+            ERROR_SAVING_FILE,
+            ERROR_GENERATING_HORCRUXES,
+            ERROR_LOADING_HORCRUXES,
+            ERROR_SAVING_HORCRUX,
+            HORCRUXES_FOUND,
+            UNKNOWN_ERROR
         };
 
     }

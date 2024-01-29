@@ -1,13 +1,11 @@
 #include <iostream>
-#include <filesystem>
 
-#include <boost/asio.hpp>
-
-#include "endpoint.hpp"
-#include "dataformat.hpp"
 #include "args.hpp"
-#include "management.hpp"
+#include "client.hpp"
 #include "request.hpp"
+
+#define HOST "127.0.0.1"
+#define PORT "44124"
 
 int main(int argc, char *argv[])
 {
@@ -16,28 +14,43 @@ int main(int argc, char *argv[])
   {
 
     horcrux::args::client_args const args = horcrux::args::parse_client_args(argc, argv);
+    /*
+        std::cout << "req: " << args.req << std::endl;
+        std::cout << "n_chunk: " << args.n_chunks << std::endl;
+        std::cout << "file_path: " << args.file_path << std::endl;
+        std::cout << "file_id: " << args.file_id << std::endl;
+    */
 
-    std::cout << "req: " << args.req << std::endl;
-    std::cout << "n_chunk: " << args.n_chunks << std::endl;
-    std::cout << "file_path: " << args.file_path << std::endl;
-    std::cout << "file_id: " << args.file_id << std::endl;
+    horcrux::client::client c;
 
-    std::string uuid = horcrux::management::generate_uuid();
+    c.connect(HOST, PORT);
 
+    int ret = -1;
+
+    switch (args.req)
     {
-      auto horcruxes{horcrux::management::generate_horcruxes_from_file(args.file_path, args.n_chunks)};
+    case horcrux::request::request_type::SAVE:
+      ret = c.send_save_request(args.file_path, args.n_chunks);
+      break;
 
-      auto sr = horcrux::request::generate_save_request(uuid, horcruxes.size(), 0, horcruxes[0]);
-      std::cout << "save request:\n"
-                << bj::serialize(sr) << std::endl;
+    case horcrux::request::request_type::LOAD:
+      ret = c.send_load_request(args.file_id, args.file_path);
+      break;
 
-      horcrux::management::save_horcruxes_to_disk(horcruxes, uuid, "C:\\Temp");
+    default:
+      break;
     }
 
+    if (ret == horcrux::dataformat::status_code::SAVE_REQUEST_OK || horcrux::dataformat::status_code::LOAD_REQUEST_OK)
     {
-      auto horcruxes{horcrux::management::load_horcruxes_from_disk(uuid, "C:\\Temp")};
-      horcrux::management::generate_file_from_horcruxes("C:\\Temp\\tree2.jpg", horcruxes);
+      std::cout << "Request handled successfully" << std::endl;
     }
+    else
+    {
+      std::cout << "Request handled with error: " << ret << std::endl;
+    }
+
+    c.disconnect();
   }
   catch (std::runtime_error &e)
   {
@@ -45,25 +58,5 @@ int main(int argc, char *argv[])
     return EXIT_FAILURE;
   }
 
-  /*
-    auto const ep = horcrux::endpoint::make_endpoint("127.0.0.1", "8282");
-
-    using boost::asio::ip::tcp;
-    boost::asio::io_context io_context;
-
-    tcp::socket socket(io_context);
-    tcp::resolver resolver(io_context);
-
-    boost::asio::connect(socket, resolver.resolve("127.0.0.1", "44124"));
-
-    std::string data{"some client data ..." + horcrux::dataformat::msg_delimiter};
-    auto result = boost::asio::write(socket, boost::asio::buffer(data));
-
-    std::cout << "data sent: " << data.length() << '/' << result << std::endl;
-
-    boost::system::error_code ec;
-    socket.shutdown(boost::asio::ip::tcp::socket::shutdown_both, ec);
-    socket.close();
-  */
   return 0;
 }

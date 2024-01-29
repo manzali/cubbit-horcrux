@@ -96,36 +96,62 @@ namespace horcrux
       ofs.close();
     }
 
-    void save_horcruxes_to_disk(std::vector<std::string> const &horcruxes, std::string uuid, fs::path dir_path)
+    bool save_horcrux_to_disk(std::string const &horcrux, std::string uuid, unsigned int index, fs::path dir_path)
     {
       // Check if path is a directory
       if (!fs::is_directory(dir_path))
       {
         std::cerr << "Path \"" << dir_path << "\" is not a directory" << std::endl;
-        exit(EXIT_FAILURE);
+        return false;
       }
 
       dir_path /= uuid;
 
       // Check if uuid directory exists
-      if (fs::exists(dir_path))
+      if (!fs::exists(dir_path))
       {
-        std::cerr << "Path \"" << dir_path << "\" already exists" << std::endl;
-        exit(EXIT_FAILURE);
+        // std::cout << "Creating " << dir_path << std::endl;
+        fs::create_directory(dir_path);
       }
 
-      fs::create_directory(dir_path);
+      std::ofstream ofs(dir_path / generate_horcrux_name(uuid, index), std::ios::binary);
+      ofs.write(horcrux.data(), horcrux.size());
+      ofs.close();
 
-      int h_count = 0;
-      for (auto const &h : horcruxes)
-      {
-        std::ofstream ofs(dir_path / generate_horcrux_name(uuid, h_count), std::ios::binary);
-        ofs.write(h.data(), h.size());
-        ofs.close();
-        ++h_count;
-      }
+      return true;
     }
 
+    /*
+        void save_horcruxes_to_disk(std::vector<std::string> const &horcruxes, std::string uuid, fs::path dir_path)
+        {
+          // Check if path is a directory
+          if (!fs::is_directory(dir_path))
+          {
+            std::cerr << "Path \"" << dir_path << "\" is not a directory" << std::endl;
+            exit(EXIT_FAILURE);
+          }
+
+          dir_path /= uuid;
+
+          // Check if uuid directory exists
+          if (fs::exists(dir_path))
+          {
+            std::cerr << "Path \"" << dir_path << "\" already exists" << std::endl;
+            exit(EXIT_FAILURE);
+          }
+
+          fs::create_directory(dir_path);
+
+          int h_count = 0;
+          for (auto const &h : horcruxes)
+          {
+            std::ofstream ofs(dir_path / generate_horcrux_name(uuid, h_count), std::ios::binary);
+            ofs.write(h.data(), h.size());
+            ofs.close();
+            ++h_count;
+          }
+        }
+    */
     std::vector<std::string> load_horcruxes_from_disk(std::string uuid, fs::path dir_path)
     {
       // Check if path is a directory

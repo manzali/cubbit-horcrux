@@ -39,8 +39,9 @@ namespace horcrux
 
                     for (unsigned int index = 0; index < horcruxes.size(); ++index)
                     {
-                        std::string const req = horcrux::request::generate_save_request(uuid, index, horcruxes[index]);
-                        boost::asio::write(m_socket, boost::asio::buffer(req));
+                        std::string const req = horcrux::request::generate_save_request(uuid, index, horcruxes.size(), horcruxes[index]);
+
+                        boost::asio::write(m_socket, boost::asio::buffer(req + horcrux::dataformat::message_delimiter));
 
                         boost::system::error_code ec;
                         boost::asio::streambuf buffer;
@@ -52,15 +53,21 @@ namespace horcrux
                             return horcrux::dataformat::status_code::SAVE_REQUEST_FAILED;
                         }
 
-                        std::istream str(&buffer);
-                        std::string s;
-                        std::getline(str, s);
+                        std::string data{
+                            std::istreambuf_iterator<char>(&buffer),
+                            std::istreambuf_iterator<char>()};
 
-                        int ret = std::stoi(s);
-                        if (ret != horcrux::dataformat::status_code::SAVE_REQUEST_OK)
+                        hr::request_obj obj;
+                        int status_code = -1;
+                        if (!hr::parse_request(data, obj) || !hr::parse_save_reply(obj, status_code))
                         {
-                            std::cerr << "server returned status code " << ret << std::endl;
-                            return ret;
+                            throw std::runtime_error("malformed request response");
+                        }
+
+                        if (status_code != horcrux::dataformat::status_code::SAVE_REQUEST_OK)
+                        {
+                            std::cerr << "server returned status code " << status_code << std::endl;
+                            return status_code;
                         }
                     }
 

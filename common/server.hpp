@@ -45,30 +45,22 @@ namespace horcrux
                                                               std::istreambuf_iterator<char>(&m_buffer),
                                                               std::istreambuf_iterator<char>()};
 
-                                                          // check if there is at leat a field
-                                                          size_t pos = data.find(hd::field_delimiter);
-                                                          if (pos == std::string::npos)
+                                                          hr::request_obj obj;
+                                                          if (!hr::parse_request(data, obj))
                                                           {
-                                                              std::cerr << "error: cannot handle the following request:\n"
-                                                                        << data << std::endl;
-                                                              return;
+                                                              throw std::runtime_error("malformed request");
                                                           }
-
-                                                          hr::request_type r = hr::get_request_type_from_string(data.substr(0, pos));
-
-                                                          // Skip first delimiter
-                                                          pos += hd::field_delimiter.size();
 
                                                           hd::status_code response_code;
 
-                                                          switch (r)
+                                                          switch (hr::get_request_type_from_object(obj))
                                                           {
                                                           case hr::request_type::SAVE:
-                                                              response_code = handle_save_request(data, pos);
+                                                              response_code = handle_save_request(obj);
                                                               break;
 
                                                           case hr::request_type::LOAD:
-                                                              response_code = handle_load_request(data, pos);
+                                                              response_code = handle_load_request(obj);
                                                               break;
 
                                                           default:
@@ -76,7 +68,7 @@ namespace horcrux
                                                           }
 
                                                           // send response
-                                                          boost::asio::write(m_socket, boost::asio::buffer(std::to_string(response_code) + hd::message_delimiter));
+                                                          boost::asio::write(m_socket, boost::asio::buffer(hr::generate_save_reply(response_code) + hd::message_delimiter));
 
                                                           // wait for an other request
                                                           wait_for_request();
@@ -93,45 +85,25 @@ namespace horcrux
                                               });
             }
 
-            hd::status_code handle_save_request(std::string &data, size_t cur_pos)
+            hd::status_code handle_save_request(hr::request_obj const &obj)
             {
                 try
                 {
-                    // get uuid
-                    size_t next_pos = data.find(hd::field_delimiter, cur_pos);
-                    if (next_pos == std::string::npos)
-                    {
-                        throw std::runtime_error("malformed save request");
-                    }
-                    std::string const uuid = data.substr(cur_pos, (next_pos - cur_pos));
+                    std::string uuid;
+                    unsigned int index, total;
+                    std::string horcrux;
 
-                    std::cout << "uuid: " << uuid << std::endl;
-
-                    // update cur_pos
-                    cur_pos = (next_pos + hd::field_delimiter.size());
-
-                    // get index
-                    next_pos = data.find(hd::field_delimiter, cur_pos);
-                    if (next_pos == std::string::npos)
+                    if (!hr::parse_save_request(obj, uuid, index, total, horcrux))
                     {
                         throw std::runtime_error("malformed save request");
                     }
 
-                    unsigned int index = std::stoi(data.substr(cur_pos, (next_pos - cur_pos)));
-
-                    std::cout << "index: " << index << std::endl;
-
-                    // update cur_pos
-                    cur_pos = (next_pos + hd::field_delimiter.size());
-
-                    if (hm::save_horcrux_to_disk(data.erase(0, cur_pos), uuid, index, m_dir))
-                    {
-                        std::cout << "save request handled successfully" << std::endl;
-                    }
-                    else
+                    if (!hm::save_horcrux_to_disk(horcrux, uuid, index, m_dir))
                     {
                         throw std::runtime_error("save request handled with errors");
                     }
+
+                    std::cout << "save request handled successfully" << std::endl;
                 }
                 catch (const std::exception &e)
                 {
@@ -142,17 +114,8 @@ namespace horcrux
                 return hd::status_code::SAVE_REQUEST_OK;
             }
 
-            hd::status_code handle_load_request(std::string &data, size_t pos)
+            hd::status_code handle_load_request(hr::request_obj const &obj)
             {
-                // get uuid
-                size_t next_pos = data.find(hd::field_delimiter, cur_pos);
-                if (next_pos == std::string::npos)
-                {
-                    throw std::runtime_error("malformed save request");
-                }
-                std::string const uuid = data.substr(cur_pos, (next_pos - cur_pos));
-
-                std::cout << "uuid: " << uuid << std::endl;
 
                 // std::cout << "handle_load_request:\n"
                 //           << hr::serialize_request(obj) << std::endl;

@@ -1,7 +1,7 @@
 #include <iostream>
 
-#include "endpoint.hpp"
-#include "server.hpp"
+#include "horcrux/endpoint.hpp"
+#include "horcrux/server.hpp"
 
 #define HOST "127.0.0.1"
 #define PORT "44124"

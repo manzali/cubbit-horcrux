@@ -5,7 +5,7 @@ add_executable(${target} main.cpp)
 
 target_include_directories(
     ${target} PUBLIC
-    ${CubbitHorcrux_SOURCE_DIR}/common
+    ${CubbitHorcrux_SOURCE_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}
 )
 

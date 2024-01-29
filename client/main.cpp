@@ -1,8 +1,8 @@
 #include <iostream>
 
-#include "args.hpp"
-#include "client.hpp"
-#include "request.hpp"
+#include "horcrux/args.hpp"
+#include "horcrux/client.hpp"
+#include "horcrux/request.hpp"
 
 #define HOST "127.0.0.1"
 #define PORT "44124"

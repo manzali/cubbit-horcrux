@@ -2,9 +2,9 @@
 
 #include <boost/asio.hpp>
 
-#include "management.hpp"
-#include "request.hpp"
-#include "dataformat.hpp"
+#include "horcrux/management.hpp"
+#include "horcrux/request.hpp"
+#include "horcrux/dataformat.hpp"
 
 namespace horcrux
 {

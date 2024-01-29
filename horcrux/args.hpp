@@ -6,8 +6,8 @@
 
 #include <boost/algorithm/string.hpp>
 
-#include "dataformat.hpp"
-#include "request.hpp"
+#include "horcrux/dataformat.hpp"
+#include "horcrux/request.hpp"
 
 namespace fs = std::filesystem;
 

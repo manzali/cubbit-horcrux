@@ -5,10 +5,10 @@
 
 #include <boost/asio.hpp>
 
-#include "endpoint.hpp"
-#include "dataformat.hpp"
-#include "request.hpp"
-#include "management.hpp"
+#include "horcrux/endpoint.hpp"
+#include "horcrux/dataformat.hpp"
+#include "horcrux/request.hpp"
+#include "horcrux/management.hpp"
 
 namespace horcrux
 {

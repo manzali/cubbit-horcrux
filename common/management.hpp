@@ -131,38 +131,6 @@ namespace horcrux
       return true;
     }
 
-    /*
-        void save_horcruxes_to_disk(std::vector<std::string> const &horcruxes, std::string uuid, fs::path dir_path)
-        {
-          // Check if path is a directory
-          if (!fs::is_directory(dir_path))
-          {
-            std::cerr << "Path \"" << dir_path << "\" is not a directory" << std::endl;
-            exit(EXIT_FAILURE);
-          }
-
-          dir_path /= uuid;
-
-          // Check if uuid directory exists
-          if (fs::exists(dir_path))
-          {
-            std::cerr << "Path \"" << dir_path << "\" already exists" << std::endl;
-            exit(EXIT_FAILURE);
-          }
-
-          fs::create_directory(dir_path);
-
-          int h_count = 0;
-          for (auto const &h : horcruxes)
-          {
-            std::ofstream ofs(dir_path / generate_horcrux_name(uuid, h_count), std::ios::binary);
-            ofs.write(h.data(), h.size());
-            ofs.close();
-            ++h_count;
-          }
-        }
-    */
-
     bool load_horcruxes_from_disk(std::string const &uuid, fs::path dir_path, std::vector<std::string> &horcruxes)
     {
       // Check if path is a directory

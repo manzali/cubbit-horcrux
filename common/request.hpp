@@ -4,10 +4,7 @@
 
 #include <boost/json.hpp>
 
-#include "dataformat.hpp"
-
 namespace bj = boost::json;
-namespace hd = horcrux::dataformat;
 
 namespace horcrux
 {

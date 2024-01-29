@@ -18,6 +18,7 @@ namespace horcrux
 
         namespace hr = horcrux::request;
         namespace hm = horcrux::management;
+        namespace hd = horcrux::dataformat;
 
         class session : public std::enable_shared_from_this<session>
         {

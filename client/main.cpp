@@ -5,9 +5,9 @@
 
 #include "endpoint.hpp"
 #include "dataformat.hpp"
-#include "args_parser.hpp"
-#include "horcrux_management.hpp"
-#include "horcrux_request.hpp"
+#include "args.hpp"
+#include "management.hpp"
+#include "request.hpp"
 
 int main(int argc, char *argv[])
 {
@@ -15,7 +15,7 @@ int main(int argc, char *argv[])
   try
   {
 
-    horcrux::client_args const args = horcrux::parse_client_args(argc, argv);
+    horcrux::args::client_args const args = horcrux::args::parse_client_args(argc, argv);
 
     std::cout << "req: " << args.req << std::endl;
     std::cout << "n_chunk: " << args.n_chunks << std::endl;

@@ -1,7 +1,7 @@
 #include <iostream>
 
 #include "endpoint.hpp"
-#include "horcrux_server.hpp"
+#include "server.hpp"
 
 int main(int argc, char *argv[])
 {
@@ -15,7 +15,7 @@ int main(int argc, char *argv[])
     auto const ep = horcrux::endpoint::make_endpoint("127.0.0.1", "44124");
 
     boost::asio::io_context io_context;
-    horcrux_server s(io_context, ep);
+    horcrux::server::server s(io_context, ep);
     io_context.run();
 
     std::cout << "Press enter to close the server...";

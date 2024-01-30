@@ -42,6 +42,7 @@ namespace horcrux
                     }
 
                     std::string uuid = horcrux::management::generate_uuid();
+                    std::cout << "generated uuid: " << uuid << std::endl;
 
                     for (unsigned int index = 0; index < horcruxes.size(); ++index)
                     {
